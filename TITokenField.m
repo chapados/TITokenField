@@ -371,6 +371,8 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 @synthesize numberOfLines;
 @synthesize selectedToken;
 @synthesize tokenizingCharacters;
+@synthesize adjustsScrollView;
+@synthesize becomesFirstResponderWhenAddingToken;
 
 #pragma mark Init
 - (id)initWithFrame:(CGRect)frame {
@@ -417,6 +419,8 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	tokens = [[NSMutableArray alloc] init];
 	editable = YES;
 	removesTokensOnEndEditing = YES;
+    becomesFirstResponderWhenAddingToken = YES;
+    adjustsScrollView = YES;
 	tokenizingCharacters = [[NSCharacterSet characterSetWithCharactersInString:@","] retain];
 }
 
@@ -551,7 +555,8 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	
 	if (shouldAdd){
 	
-		[self becomeFirstResponder];
+        if ( becomesFirstResponderWhenAddingToken )
+            [self becomeFirstResponder];
 	
 		[token addTarget:self action:@selector(tokenTouchDown:) forControlEvents:UIControlEventTouchDown];
 		[token addTarget:self action:@selector(tokenTouchUpInside:) forControlEvents:UIControlEventTouchUpInside];
@@ -707,7 +712,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	
 	[self layoutTokensAnimated:animated];
 	
-	if (resultsModeEnabled != flag){
+	if ( adjustsScrollView && (resultsModeEnabled != flag) ){
 		
 		//Hide / show the shadow
 		[self.layer setMasksToBounds:!flag];

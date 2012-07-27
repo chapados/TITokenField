@@ -122,6 +122,8 @@ typedef enum {
 @property (nonatomic, assign) BOOL editable;
 @property (nonatomic, assign) BOOL resultsModeEnabled;
 @property (nonatomic, assign) BOOL removesTokensOnEndEditing;
+@property (nonatomic, assign) BOOL adjustsScrollView;
+@property (nonatomic, assign) BOOL becomesFirstResponderWhenAddingToken;
 @property (nonatomic, readonly) int numberOfLines;
 @property (nonatomic, retain) NSCharacterSet * tokenizingCharacters;
 
