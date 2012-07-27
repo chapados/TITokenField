@@ -594,14 +594,25 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 
 - (void)selectToken:(TIToken *)token {
 	
-	[self deselectSelectedToken];
+	BOOL shouldSelect = YES;
+	if ([delegate respondsToSelector:@selector(tokenField:willSelectToken:)]) {
+		shouldSelect = [delegate tokenField:self willSelectToken:token];
+	}
 	
-	selectedToken = token;
-	[selectedToken setSelected:YES];
-	
-	[self becomeFirstResponder];
-	
-	[self setText:kTextHidden];
+	if (shouldSelect) {
+		[self deselectSelectedToken];
+		
+		selectedToken = token;
+		[selectedToken setSelected:YES];
+		
+		[self becomeFirstResponder];
+		
+		[self setText:kTextHidden];
+		
+		if ([delegate respondsToSelector:@selector(tokenField:didSelectToken:)]) {
+			[delegate tokenField:self didSelectToken:token];
+		}
+	}
 }
 
 - (void)deselectSelectedToken {
