@@ -538,7 +538,11 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 }
 
 - (void)didChangeText {
-	if (self.text.length == 0) [self setText:kTextEmpty];
+	if (self.text.length == 0) {
+        [self setText:kTextEmpty];
+    } else {
+        self.placeholderLabel.hidden = YES;
+    }
 }
 
 - (BOOL)canPerformAction:(SEL)action withSender:(id)sender {
@@ -899,6 +903,9 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 		[tokenField tokenizeText];
 		return NO;
 	}
+    
+    if ([string isEqualToString:@""] && range.location == 1 && range.length == 1 && tokenField.tokens.count == 0)
+        [tokenField setText:kTextEmpty];
 	
 	if ([delegate respondsToSelector:@selector(textField:shouldChangeCharactersInRange:replacementString:)]){
 		return [delegate textField:textField shouldChangeCharactersInRange:range replacementString:string];
