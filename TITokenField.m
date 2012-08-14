@@ -355,6 +355,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 @property (nonatomic, readonly) CGFloat leftViewWidth;
 @property (nonatomic, readonly) CGFloat rightViewWidth;
 @property (nonatomic, readonly) UIScrollView * scrollView;
+@property (nonatomic, retain, readwrite) UILabel *placeholderLabel;
 @end
 
 @interface TITokenField (Private)
@@ -373,6 +374,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 @synthesize tokenizingCharacters;
 @synthesize adjustsScrollView;
 @synthesize becomesFirstResponderWhenAddingToken;
+@synthesize placeholderLabel;
 
 #pragma mark Init
 - (id)initWithFrame:(CGRect)frame {
@@ -405,6 +407,12 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	[self addTarget:self action:@selector(didEndEditing) forControlEvents:UIControlEventEditingDidEnd];
 	[self addTarget:self action:@selector(didChangeText) forControlEvents:UIControlEventEditingChanged];
 	
+	placeholderLabel = [[UILabel alloc] initWithFrame:CGRectZero];
+	placeholderLabel.font = self.font;
+	placeholderLabel.textColor = [UIColor lightGrayColor];
+	placeholderLabel.hidden = YES;
+	[self addSubview:placeholderLabel];
+	
 	[self.layer setShadowColor:[[UIColor blackColor] CGColor]];
 	[self.layer setShadowOpacity:0.6];
 	[self.layer setShadowRadius:12];
@@ -431,8 +439,22 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	[self layoutTokensAnimated:NO];
 }
 
+- (void)setPlaceholder:(NSString *)placeholder
+{
+	[super setPlaceholder:placeholder];
+	self.placeholderLabel.text = placeholder;
+	self.placeholderLabel.frame = [self placeholderRectForBounds:self.bounds];
+}
+
 - (void)setText:(NSString *)text {
 	[super setText:(text.length == 0 ? kTextEmpty : text)];
+	
+	if ( text == kTextEmpty && self.tokens.count == 0 ) {
+		self.placeholderLabel.frame = [self placeholderRectForBounds:self.bounds];
+		self.placeholderLabel.hidden = NO;
+	} else {
+		self.placeholderLabel.hidden = YES;
+	}
 }
 
 - (void)setFont:(UIFont *)font {
@@ -555,8 +577,8 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	
 	if (shouldAdd){
 	
-        if ( becomesFirstResponderWhenAddingToken )
-            [self becomeFirstResponder];
+		if ( becomesFirstResponderWhenAddingToken )
+			[self becomeFirstResponder];
 	
 		[token addTarget:self action:@selector(tokenTouchDown:) forControlEvents:UIControlEventTouchDown];
 		[token addTarget:self action:@selector(tokenTouchUpInside:) forControlEvents:UIControlEventTouchUpInside];
@@ -588,6 +610,8 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 		
 		[token removeFromSuperview];
 		[tokens removeObject:token];
+		
+		[self setText:kTextEmpty];
 		
 		if ([delegate respondsToSelector:@selector(tokenField:didRemoveToken:)]){
 			[delegate tokenField:self didRemoveToken:token];
@@ -752,6 +776,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 		[self setLeftView:nil];
 	}
 	
+	self.placeholderLabel.frame = [self placeholderRectForBounds:self.bounds];
 	[self layoutTokensAnimated:YES];
 }
 
@@ -771,7 +796,9 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 }
 
 - (CGRect)placeholderRectForBounds:(CGRect)bounds {
-	return [self textRectForBounds:bounds];
+	CGRect frame = [self textRectForBounds:bounds];
+	frame.origin.y = 0;
+	return frame;
 }
 
 - (CGRect)leftViewRectForBounds:(CGRect)bounds {
@@ -811,7 +838,8 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	[internalDelegate release];
 	[tokens release];
 	[tokenizingCharacters release];
-    [super dealloc];
+	[placeholderLabel release];
+	[super dealloc];
 }
 
 @end
