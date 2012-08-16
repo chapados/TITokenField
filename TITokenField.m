@@ -346,6 +346,8 @@
 NSString * const kTextEmpty = @"\u200B"; // Zero-Width Space
 NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 
+static const NSInteger kPromptLabelTag = 1001;
+
 @interface TITokenFieldInternalDelegate ()
 @property (nonatomic, assign) id <UITextFieldDelegate> delegate;
 @property (nonatomic, assign) TITokenField * tokenField;
@@ -449,7 +451,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 - (void)setText:(NSString *)text {
 	[super setText:(text.length == 0 ? kTextEmpty : text)];
 	
-	if ( text == kTextEmpty && self.tokens.count == 0 ) {
+	if ( [text isEqualToString:kTextEmpty] && self.tokens.count == 0 ) {
 		self.placeholderLabel.frame = [self placeholderRectForBounds:self.bounds];
 		self.placeholderLabel.hidden = NO;
 	} else {
@@ -764,6 +766,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 		UILabel * label = (UILabel *)self.leftView;
 		if (!label || ![label isKindOfClass:[UILabel class]]){
 			label = [[UILabel alloc] initWithFrame:CGRectZero];
+            label.tag = kPromptLabelTag;
 			[label setTextColor:[UIColor colorWithWhite:0.5 alpha:1]];
 			[self setLeftView:label];
 			[label release];
@@ -781,6 +784,20 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 	}
 	
 	self.placeholderLabel.frame = [self placeholderRectForBounds:self.bounds];
+	[self layoutTokensAnimated:YES];
+}
+
+- (void)setLeftView:(UIView *)leftView
+{
+    [super setLeftView:leftView];
+    self.placeholderLabel.frame = [self placeholderRectForBounds:self.bounds];
+	[self layoutTokensAnimated:YES];
+}
+
+- (void)setRightView:(UIView *)rightView
+{
+    [super setRightView:rightView];
+    self.placeholderLabel.frame = [self placeholderRectForBounds:self.bounds];
 	[self layoutTokensAnimated:YES];
 }
 
@@ -806,12 +823,24 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 }
 
 - (CGRect)leftViewRectForBounds:(CGRect)bounds {
-	return ((CGRect){{8, ceilf(self.font.lineHeight * 4 / 7)}, self.leftView.bounds.size});
+    CGRect frame = CGRectZero;
+    if ( self.leftView.tag == kPromptLabelTag ) {
+        frame = ((CGRect){{8, ceilf(self.font.lineHeight * 4 / 7)}, self.leftView.bounds.size});
+    } else {
+        frame = [super leftViewRectForBounds:bounds];
+        frame.origin.x = 8;
+    }
+    
+    return frame;
 }
 
 - (CGRect)rightViewRectForBounds:(CGRect)bounds {
-	return ((CGRect){{bounds.size.width - self.rightView.bounds.size.width - 6, 
-		bounds.size.height - self.rightView.bounds.size.height - 6}, self.rightView.bounds.size});
+    if ( self.rightView.tag == kPromptLabelTag ) {
+        return ((CGRect){{bounds.size.width - self.rightView.bounds.size.width - 6,
+            bounds.size.height - self.rightView.bounds.size.height - 6}, self.rightView.bounds.size});
+    } else {
+        return [super rightViewRectForBounds:bounds];
+    }
 }
 
 - (CGFloat)leftViewWidth {
@@ -834,7 +863,7 @@ NSString * const kTextHidden = @"\u200D"; // Zero-Width Joiner
 
 #pragma mark Other
 - (NSString *)description {
-	return [NSString stringWithFormat:@"<TITokenField %p; prompt = \"%@\">", self, ((UILabel *)self.leftView).text];
+	return [NSString stringWithFormat:@"<TITokenField %p; prompt = \"%@\">", self, [self.leftView respondsToSelector:@selector(text)] ? ((UILabel *)self.leftView).text : @"N/A"];
 }
 
 - (void)dealloc {
