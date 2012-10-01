@@ -1012,7 +1012,11 @@ static const NSInteger kPromptLabelTag = 1001;
 CGFloat const hTextPadding = 14;
 CGFloat const vTextPadding = 8;
 CGFloat const kDisclosureThickness = 2.5;
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 60000
+NSLineBreakMode const kLineBreakMode = NSLineBreakByWordWrapping;
+#else
 UILineBreakMode const kLineBreakMode = UILineBreakModeTailTruncation;
+#endif
 
 @interface TIToken (Private)
 CGPathRef CGPathCreateTokenPath(CGSize size, BOOL innerPath);
